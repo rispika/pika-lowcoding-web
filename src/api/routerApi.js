@@ -8,10 +8,11 @@ const pikaMenu = () => {
   });
 };
 
-const pikaMenuAdmin = (page, size) => {
+const pikaMenuAdmin = (page, size, queryForm) => {
   return http({
     url: `/system/router/pikaMenuAdmin/${page}/${size}`,
     method: `get`,
+    params: queryForm,
   });
 };
 

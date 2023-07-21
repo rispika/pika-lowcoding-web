@@ -49,6 +49,9 @@ export default {
     color: var(--hover-color);
   }
 }
+.iconfont {
+  margin-right: 5px;
+}
 .pointer {
   cursor: pointer;
 }

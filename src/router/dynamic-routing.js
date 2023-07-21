@@ -2,6 +2,7 @@ import router from "@/router";
 import store from "@/store";
 import routerApi from "@/api/routerApi";
 router.beforeEach((to, from, next) => {
+  // console.log(router.getRoutes());
   if (to.fullPath === "/") {
     router.push("/login");
   } else if (to.fullPath === "/login") {
@@ -24,13 +25,15 @@ router.beforeEach((to, from, next) => {
 function addDynamicMenuAndRoutes(to, from, next) {
   //使用vuex记录是否已经加载过路由表
   if (store.state.menuRouteLoaded) {
-    console.log(router);
     return;
   }
   //ajax查询路由
   routerApi
     .pikaRouter()
     .then((res) => {
+      if (store.state.menuRouteLoaded) {
+        return;
+      }
       // 添加动态路由
       addDynamicRoutes(res.routers);
       router.addRoute({
@@ -40,7 +43,7 @@ function addDynamicMenuAndRoutes(to, from, next) {
       // 保存加载状态
       store.commit("setMenuRouteLoaded", true);
       // 保存菜单树
-      //   store.commit("setNavTree", res.data);
+      store.commit("setNavTree", res.routers);
       // console.log("路由加载完成", router.getRoutes());
     })
     .catch(() => {});

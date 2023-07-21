@@ -36,6 +36,7 @@
 </template>
 
 <script>
+import { login } from "@/api/userApi";
 export default {
   name: "login-page",
   data() {
@@ -60,7 +61,7 @@ export default {
     return {
       labelPosition: "top",
       loginForm: {
-        account: "pika12345",
+        account: "pika@admin",
         password: "123456",
       },
       rules: {
@@ -70,10 +71,19 @@ export default {
     };
   },
   methods: {
+    /**
+     * 提交表单
+     * @param {String} formName
+     */
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          this.$router.push("/home");
+          login(this.loginForm.account, this.loginForm.password)
+            .then((res) => {
+              console.log(res);
+              this.$router.push("/home");
+            })
+            .catch(() => {});
         } else {
           return false;
         }
@@ -83,6 +93,7 @@ export default {
     //   this.$refs[formName].resetFields();
     // },
   },
+  async created() {},
 };
 </script>
 

@@ -8,9 +8,13 @@ export default new Vuex.Store({
     menuRouteLoaded: false,
     collapse: true,
     routerHistory: [],
+    navTree: [],
   },
   getters: {},
   mutations: {
+    setNavTree(state, newVal) {
+      state.navTree = newVal;
+    },
     setCollapse(state, newVal) {
       state.collapse = newVal;
     },

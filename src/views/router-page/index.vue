@@ -3,7 +3,23 @@
   <div>
     <!-- 编辑栏 -->
     <div class="edit-bar">
-      <el-button type="primary" @click="handleAdd">添加</el-button>
+      <el-input
+        type="text"
+        v-model="queryForm.routerName"
+        placeholder="路由名称"
+        style="width: 220px"
+      ></el-input>
+      <el-select v-model="queryForm.routerLevel" placeholder="路由标识">
+        <el-option label="" :value="null"></el-option>
+        <el-option label="一级菜单" :value="1"></el-option>
+        <el-option label="二级菜单" :value="2"></el-option>
+        <el-option label="一级无孩子菜单" :value="0"></el-option>
+        <el-option label="二级无孩子菜单" :value="-1"></el-option>
+        <el-option label="三级无孩子菜单" :value="-2"></el-option>
+        <el-option label="隐藏菜单" :value="-3"></el-option>
+      </el-select>
+      <el-button type="defualt" @click="getMenuList">搜 索</el-button>
+      <el-button type="primary" @click="handleAdd">添 加</el-button>
     </div>
     <!-- 表格开始 -->
     <el-table :data="menu" max-height="700">
@@ -207,6 +223,10 @@ export default {
       levelForm: [],
       visible: false,
       editFlag: true, //true 编辑 false 添加
+      queryForm: {
+        routerName: "",
+        routerLevel: null,
+      },
       form: {
         id: null,
         index: "",
@@ -297,7 +317,7 @@ export default {
     // 获取接口Api
     getMenuList() {
       routerApi
-        .pikaMenuAdmin(this.page, this.size)
+        .pikaMenuAdmin(this.page, this.size, this.queryForm)
         .then((res) => {
           this.menu = res.records;
           this.total = res.total;
@@ -403,5 +423,11 @@ export default {
 .edit-bar {
   border-bottom: $--light-border;
   padding-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  ::v-deep .el-button + .el-button,
+  .el-checkbox.is-bordered + .el-checkbox.is-bordered {
+    margin-left: 0;
+  }
 }
 </style>

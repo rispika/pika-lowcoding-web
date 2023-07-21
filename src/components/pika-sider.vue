@@ -1,7 +1,8 @@
 <template>
   <el-menu
+    :router="true"
     mode="vertical"
-    default-active="1-1"
+    :default-active="activeIndex"
     :collapse-transition="false"
     :collapse="!collapse"
     style="height: 100%; width: 99%"
@@ -24,12 +25,12 @@
                 {{ item2.name }}
               </span>
             </template>
-            <!-- 三级 -->
+            <!-- 三级无孩子菜单 -->
             <el-menu-item
               v-for="(item3, index3) in item2.children"
               :key="index3"
               :index="item3.index"
-              @click="$router.push(item3.to)"
+              :route="item3.to"
             >
               <pika-icon :name="item3.icon"></pika-icon>
               <span>{{ item3.name }}</span>
@@ -40,7 +41,7 @@
           <el-menu-item
             v-if="!item2.children"
             :index="item2.index"
-            @click="$router.push(item2.to)"
+            :route="item2.to"
           >
             <pika-icon :name="item2.icon"></pika-icon>
             <span>{{ item2.name }}</span>
@@ -48,11 +49,7 @@
         </div>
       </el-submenu>
       <!-- 一级无孩子子菜单 -->
-      <el-menu-item
-        :index="item.index"
-        v-if="!item.children"
-        @click="$router.push(item.to)"
-      >
+      <el-menu-item :index="item.index" v-if="!item.children" :route="item.to">
         <pika-icon :name="item.icon"></pika-icon>
         <span slot="title">{{ item.name }}</span>
       </el-menu-item>
@@ -74,6 +71,14 @@ export default {
   computed: {
     collapse() {
       return this.$store.state.collapse;
+    },
+    activeIndex() {
+      for (const i in this.$store.state.navTree) {
+        if (this.$store.state.navTree[i].path === this.$route.path) {
+          return this.$store.state.navTree[i].index;
+        }
+      }
+      return "1-1";
     },
   },
   methods: {

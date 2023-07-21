@@ -1,146 +1,44 @@
 <template>
   <div>
     <!-- 搜索栏模板 -->
-    <div class="search-template">
-      <div v-for="(item, index) in searchList" :key="index">
-        <el-input
-          v-if="!item.tableColumnType"
-          v-model="searchData[item.tableColumnProp]"
-          :placeholder="`请输入${item.tableColumnLabel}`"
-        ></el-input>
-        <el-select
-          v-else-if="item.tableColumnType === 'mapper'"
-          v-model="searchData[item.tableColumnProp]"
-          :placeholder="`请选择${item.tableColumnLabel}`"
-        >
-          <el-option value=""> </el-option>
-          <el-option
-            v-for="(mapper, index1) in item.mappers"
-            :label="mapper.mapperLabel"
-            :value="mapper.mapperValue"
-            :key="index1"
-          ></el-option>
-        </el-select>
-      </div>
-      <el-button @click="renderTable" type="default">查 询</el-button>
-      <el-button @click="resetSearchBar" type="default">重 置</el-button>
-      <el-button @click="handleAdd" type="primary">添 加</el-button>
-    </div>
+    <pika-query
+      :query-data.sync="searchData"
+      :query-list="searchList"
+      @query="renderTable"
+      @add="handleAdd"
+    ></pika-query>
     <!-- 表格模板 -->
-    <el-table max-height="700" class="table-template" :data="tableData">
-      <template v-for="(item, index) in table">
-        <el-table-column
-          v-if="!item.tableColumnType"
-          :prop="item.tableColumnProp"
-          :label="item.tableColumnLabel"
-          :key="`table-${index}`"
-          align="center"
-          min-width="100"
+    <pika-table :table="table" :table-data="tableData">
+      <!-- 操作栏 -->
+      <template slot-scope="scope">
+        <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
+        <el-button size="mini" type="danger" @click="handleDelete(scope.row)"
+          >删除</el-button
         >
-        </el-table-column>
-        <el-table-column
-          v-else-if="item.tableColumnType === 'mapper'"
-          :prop="item.tableColumnProp"
-          :label="item.tableColumnLabel"
-          :key="`table-${index}`"
-          align="center"
-          min-width="100"
-        >
-          <template slot-scope="scope">
-            <span
-              v-for="(mapper, index1) in item.mappers"
-              v-show="mapper.mapperValue === scope.row[item.tableColumnProp]"
-              :key="index1"
-            >
-              {{ mapper.mapperLabel }}
-            </span>
-          </template>
-        </el-table-column>
       </template>
-      <el-table-column label="操作">
-        <template slot-scope="scope">
-          <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button size="mini" type="danger" @click="handleDelete(scope.row)"
-            >删除</el-button
-          >
-        </template>
-      </el-table-column>
-    </el-table>
+    </pika-table>
     <!-- 表格结束 -->
     <!-- 分页开始 -->
-    <div class="pagination">
-      <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="page"
-        :page-sizes="[10, 20, 30, 40]"
-        :page-size="10"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total"
-      >
-      </el-pagination>
-    </div>
+    <pika-pagination
+      @pagination-change="renderTable"
+      :pagination.sync="pagination"
+    ></pika-pagination>
     <!-- 分页结束 -->
     <!-- 对话框 -->
-    <el-dialog
-      @closed="dialogClosed"
-      :title="form.title"
+    <pika-dialog
+      :form="form"
+      :table="table"
+      :formData="formData"
       :visible.sync="dialogFormVisible"
-    >
-      <el-form
-        ref="form"
-        label-position="right"
-        label-width="120px"
-        :model="formData"
-      >
-        <div
-          v-for="(item, index) in table"
-          v-show="item.tableColumnProp !== 'id'"
-          :key="index"
-        >
-          <el-form-item
-            :label="item.tableColumnLabel"
-            :prop="item.tableColumnProp"
-            :rules="item.tableColumnRules"
-            v-if="!item.tableColumnType"
-          >
-            <el-input
-              v-model="formData[item.tableColumnProp]"
-              autocomplete="off"
-              :placeholder="`请输入${item.tableColumnLabel}`"
-            ></el-input>
-          </el-form-item>
-          <el-form-item
-            :label="item.tableColumnLabel"
-            :prop="item.tableColumnProp"
-            :rules="item.tableColumnRules"
-            v-else-if="item.tableColumnType === 'mapper'"
-          >
-            <el-select
-              v-model="formData[item.tableColumnProp]"
-              :placeholder="`请选择${item.tableColumnLabel}`"
-            >
-              <el-option
-                v-for="(mapper, index1) in item.mappers"
-                :label="mapper.mapperLabel"
-                :value="mapper.mapperValue"
-                :key="index1"
-              ></el-option>
-            </el-select>
-          </el-form-item>
-        </div>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-      </div>
-    </el-dialog>
+      @submitForm="submitForm"
+    ></pika-dialog>
     <!-- 对话框结束 -->
   </div>
 </template>
 
 <script>
 import { queryTemplateInfo } from "@/api/generateApi";
+
 import {
   selectAll,
   selectOne,
@@ -153,9 +51,11 @@ export default {
   data() {
     return {
       // 分页
-      page: 1,
-      size: 10,
-      total: 0,
+      pagination: {
+        page: 1,
+        size: 10,
+        total: 0,
+      },
       // 搜索栏
       searchList: [],
       searchData: {},
@@ -200,7 +100,9 @@ export default {
         title: "修改表单",
       },
       formData: {},
+      // 编辑标识
       editFlag: true,
+      // dialog隐藏标识
       dialogFormVisible: false,
     };
   },
@@ -212,11 +114,6 @@ export default {
       queryTemplateInfo("1")
         .then((res) => {
           this.table = res.tableColumns;
-          res.tableColumns.forEach((column) => {
-            if (column.searchFlag) {
-              this.searchList.push(column);
-            }
-          });
         })
         .catch(() => {});
     },
@@ -224,24 +121,17 @@ export default {
      * 渲染表格信息
      */
     renderTable() {
-      selectAll(this.page, this.size, this.searchData)
+      selectAll(this.pagination.page, this.pagination.size, this.searchData)
         .then((res) => {
           this.tableData = res.records;
           // 解决bug
-          if (res.total < (this.page - 1) * this.size) {
+          if (res.total < (this.pagination.page - 1) * this.pagination.size) {
             this.page = Math.floor(res.total / this.size);
             this.renderTable();
           }
-          this.total = res.total;
+          this.pagination.total = res.total;
         })
         .catch(() => {});
-    },
-    /**
-     * 搜索栏重置按钮
-     */
-    resetSearchBar() {
-      this.searchData = {};
-      this.renderTable();
     },
     /**
      * 处理编辑按钮点击事件
@@ -277,13 +167,7 @@ export default {
       this.editFlag = false;
       this.dialogFormVisible = true;
     },
-    /**
-     * 对话框关闭触发钩子
-     * 默认用于重置表单信息
-     */
-    dialogClosed() {
-      this.$refs["form"].resetFields();
-    },
+
     /**
      * 提交表单
      */
@@ -308,13 +192,14 @@ export default {
           .catch(() => {});
       }
     },
-    handleSizeChange(val) {
-      this.size = val;
-      this.renderTable();
-    },
-    handleCurrentChange(val) {
-      this.page = val;
-      this.renderTable();
+  },
+  watch: {
+    table() {
+      this.table.forEach((column) => {
+        if (column.searchFlag) {
+          this.searchList.push(column);
+        }
+      });
     },
   },
   created() {
@@ -325,32 +210,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// 分页
-.pagination {
-  margin-top: 20px;
-  text-align: center;
-}
-// 搜索
-.search-template {
-  // margin-bottom: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  border-bottom: $--light-border;
-  padding-bottom: 20px;
-  // ::v-deep .el-select-dropdown {
-  //   width: 200px;
-  // }
-  ::v-deep .el-button + .el-button,
-  .el-checkbox.is-bordered + .el-checkbox.is-bordered {
-    margin-left: 0;
-  }
-  button {
-    float: right;
-    height: 40px;
-    margin-right: 0;
-  }
-}
 .table-template {
   width: 100%;
 }
